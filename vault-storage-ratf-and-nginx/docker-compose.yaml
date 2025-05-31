@@ -1,0 +1,90 @@
+name: my-dev-vault-cluster
+
+services:
+  vault-server1:
+    image: hashicorp/vault:1.17
+    hostname:  vault-dev-server1
+    container_name: vault-dev-server1
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - vault-cluster-network
+    environment:
+      - VAULT_ADDR=http://localhost:8200
+      - VAULT_LOG_FILE=/vault/logs/vault.log
+      - VAULT_LOG_LEVEL=debug
+    volumes:
+      - ./vault-server1/file:/vault/file # mapping storage volume on computer
+      - ./vault-server1/logs:/vault/logs # mapping storage volume on computer
+      - ./vault-server1/config:/vault/config # mapping storage volume on computer
+      - ./unseal_script:/unseal_script
+    # entrypoint: vault server -config=/vault/config/config.hcl
+    entrypoint: ["/bin/sh", "-c", "/unseal_script/vault-init.sh && tail -f /dev/null"]
+    
+  vault-server2:
+    image: hashicorp/vault:1.17
+    hostname:  vault-dev-server2
+    container_name: vault-dev-server2
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - vault-cluster-network
+    environment:
+      - VAULT_ADDR=http://localhost:8200
+      - VAULT_LOG_FILE=/vault/logs/vault.log
+      - VAULT_LOG_LEVEL=debug
+    volumes:
+      - ./vault-server2/file:/vault/file # mapping storage volume on computer
+      - ./vault-server2/logs:/vault/logs # mapping storage volume on computer
+      - ./vault-server2/config:/vault/config # mapping storage volume on computer
+      - ./unseal_script:/unseal_script
+    # entrypoint: vault server -config=/vault/config/config.hcl
+    entrypoint: ["/bin/sh", "-c", "/unseal_script/vault-raft-join.sh && tail -f /dev/null"]
+    depends_on:
+      - vault-server1
+      
+
+  vault-server3:
+    image: hashicorp/vault:1.17
+    hostname:  vault-dev-server3
+    container_name: vault-dev-server3
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - vault-cluster-network
+    environment:
+      - VAULT_ADDR=http://localhost:8200
+      - VAULT_LOG_FILE=/vault/logs/vault.log
+      - VAULT_LOG_LEVEL=debug
+    volumes:
+      - ./vault-server3/file:/vault/file # mapping storage volume on computer
+      - ./vault-server3/logs:/vault/logs # mapping storage volume on computer
+      - ./vault-server3/config:/vault/config # mapping storage volume on computer
+      - ./unseal_script:/unseal_script
+    # entrypoint: vault server -config=/vault/config/config.hcl
+    entrypoint: ["/bin/sh", "-c", "/unseal_script/vault-raft-join.sh && tail -f /dev/null"]
+    depends_on:
+      - vault-server1
+      - vault-server2
+  nginx:
+    image: nginx:latest
+    hostname: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certificate:/etc/nginx/certificate
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - vault-cluster-network
+    depends_on:
+      - vault-server1
+      - vault-server2
+      - vault-server3
+
+networks:
+  vault-cluster-network:
+    driver: bridge
+    

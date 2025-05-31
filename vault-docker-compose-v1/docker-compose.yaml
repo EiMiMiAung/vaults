@@ -1,0 +1,63 @@
+name: my-dev-vault-cluster
+
+services:
+  vault-server1:
+    image: hashicorp/vault:1.17
+    hostname:  sg-vault-dev-server1
+    container_name: sg-vault-dev-server1
+    ports:
+      - "8206:8200"
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - vault-cluster-network
+    environment:
+      - VAULT_ADDR=http://localhost:8200
+    volumes:
+      - ./vault-server1/file:/vault/file # mapping storage volume on computer
+      - ./vault-server1/logs:/vault/logs # mapping storage volume on computer
+      - ./vault-server1/config:/vault/config # mapping storage volume on computer
+    entrypoint: vault server -config=/vault/config/config.hcl
+    
+
+  vault-server2:
+    image: hashicorp/vault:1.17
+    hostname:  sg-vault-dev-server2
+    container_name: sg-vault-dev-server2
+    ports:
+      - "8208:8200"
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - vault-cluster-network
+    environment:
+      - VAULT_ADDR=http://localhost:8200
+    volumes:
+      - ./vault-server2/file:/vault/file # mapping storage volume on computer
+      - ./vault-server2/logs:/vault/logs # mapping storage volume on computer
+      - ./vault-server2/config:/vault/config # mapping storage volume on computer
+    entrypoint: vault server -config=/vault/config/config.hcl
+      
+
+  vault-server3:
+    image: hashicorp/vault:1.17
+    hostname:  sg-vault-dev-server3
+    container_name: sg-vault-dev-server3
+    ports:
+      - "8210:8200"
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - vault-cluster-network
+    environment:
+      - VAULT_ADDR=http://localhost:8200
+    volumes:
+      - ./vault-server3/file:/vault/file # mapping storage volume on computer
+      - ./vault-server3/logs:/vault/logs # mapping storage volume on computer
+      - ./vault-server3/config:/vault/config # mapping storage volume on computer
+    entrypoint: vault server -config=/vault/config/config.hcl
+
+networks:
+  vault-cluster-network:
+    driver: bridge
+    

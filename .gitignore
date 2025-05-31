@@ -1,0 +1,6 @@
+*/ngnix/logs/*
+*/ngnix/certificate/*
+*/script/*.txt
+unseal-output.txt
+runbook.md
+run-book.md
